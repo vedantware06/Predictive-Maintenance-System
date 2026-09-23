@@ -109,3 +109,94 @@ SQLite Database
 Streamlit Dashboard
         ↓
 Prediction & Risk Monitoring
+---
+
+## 🚦 Risk Classification
+
+| Failure Probability | Risk Status |
+|---|---|
+| 0% - 30% | NORMAL |
+| 30% - 60% | MONITOR |
+| 60% - 100% | MAINTENANCE REQUIRED |
+
+---
+
+## 🗄️ Database
+
+SQLite is used to store prediction history including machine parameters, prediction results, failure probability, risk status, and prediction time.
+
+---
+
+## 🚀 FastAPI Backend
+
+The FastAPI backend provides APIs for machine failure prediction and prediction history.
+
+### API Endpoints
+
+- `GET /` - API status
+- `GET /health` - System health check
+- `POST /predict` - Predict machine failure
+- `GET /history` - View prediction history
+
+Interactive API documentation:
+
+`http://127.0.0.1:8000/docs`
+
+---
+
+## 👨‍🎓 Student Information
+
+**Student:** Vedant Ajay Ware  
+**Roll No.:** 75  
+**Class:** TY B.Sc. Data Science  
+**Department:** CASAS Department  
+**College:** New Arts, Commerce and Science College, Ahilyanagar  
+**Project Mentor:** Mansi Gugale
+
+---
+
+## 📌 Project Status
+
+🚧 Project under development
+
+- ✅ Dataset Analysis
+- ✅ Data Preprocessing
+- ✅ Machine Learning Models
+- ✅ Model Comparison
+- ✅ Random Forest Model
+- ✅ Prediction System
+- ✅ FastAPI Backend
+- ✅ SQLite Database
+- 🔄 Streamlit Dashboard Integration
+- 🔄 Final Testing
+---
+
+## 📁 Project Structure
+
+```text
+Predictive-Maintenance-System/
+│
+├── backend/
+│   ├── app.py
+│   └── database.py
+│
+├── dashboard/
+│   └── dashboard.py
+│
+├── data/
+│   └── predictive_maintenance.csv
+│
+├── models/
+│   └── predictive_maintenance_model.pkl
+│
+├── notebooks/
+│   ├── 01_data_analysis.py
+│   ├── 02_preprocessing.py
+│   ├── 03_model_training.py
+│   └── 04_prediction.py
+│
+├── reports/
+│
+├── .gitignore
+├── requirements.txt
+└── README.md

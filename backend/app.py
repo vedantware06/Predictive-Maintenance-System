@@ -8,6 +8,9 @@ from backend.database import (
     get_predictions
 )
 
+from backend.real_time_simulator import generate_sensor_data
+
+
 # ==========================================
 # CREATE FASTAPI APP
 # ==========================================
@@ -41,6 +44,7 @@ create_table()
 
 @app.get("/")
 def home():
+
     return {
         "message": "Predictive Maintenance API is running"
     }
@@ -52,6 +56,7 @@ def home():
 
 @app.get("/health")
 def health():
+
     return {
         "status": "Running",
         "model": "Random Forest",
@@ -60,22 +65,34 @@ def health():
 
 
 # ==========================================
-# PREDICTION API
+# NORMAL PREDICTION API
 # ==========================================
 
 @app.post("/predict")
 def predict(
+
     Type: int,
+
     air_temperature: float,
+
     process_temperature: float,
+
     rotational_speed: float,
+
     torque: float,
+
     tool_wear: float,
+
     TWF: int = 0,
+
     HDF: int = 0,
+
     PWF: int = 0,
+
     OSF: int = 0,
+
     RNF: int = 0
+
 ):
 
     # ======================================
@@ -83,17 +100,34 @@ def predict(
     # ======================================
 
     machine_data = pd.DataFrame([{
+
         "Type": Type,
-        "Air temperature [K]": air_temperature,
-        "Process temperature [K]": process_temperature,
-        "Rotational speed [rpm]": rotational_speed,
-        "Torque [Nm]": torque,
-        "Tool wear [min]": tool_wear,
+
+        "Air temperature [K]":
+            air_temperature,
+
+        "Process temperature [K]":
+            process_temperature,
+
+        "Rotational speed [rpm]":
+            rotational_speed,
+
+        "Torque [Nm]":
+            torque,
+
+        "Tool wear [min]":
+            tool_wear,
+
         "TWF": TWF,
+
         "HDF": HDF,
+
         "PWF": PWF,
+
         "OSF": OSF,
+
         "RNF": RNF
+
     }])
 
 
@@ -101,9 +135,13 @@ def predict(
     # MODEL PREDICTION
     # ======================================
 
-    prediction = model.predict(machine_data)[0]
+    prediction = model.predict(
+        machine_data
+    )[0]
 
-    probability = model.predict_proba(machine_data)[0][1]
+    probability = model.predict_proba(
+        machine_data
+    )[0][1]
 
     failure_probability = probability * 100
 
@@ -151,6 +189,7 @@ def predict(
         ),
 
         risk_status=risk_status
+
     )
 
 
@@ -160,22 +199,27 @@ def predict(
 
     return {
 
-        "machine_failure": int(prediction),
+        "machine_failure":
+            int(prediction),
 
-        "prediction": (
-            "FAILURE"
-            if prediction == 1
-            else "NO FAILURE"
-        ),
+        "prediction":
+            (
+                "FAILURE"
+                if prediction == 1
+                else "NO FAILURE"
+            ),
 
-        "failure_probability": round(
-            failure_probability,
-            2
-        ),
+        "failure_probability":
+            round(
+                failure_probability,
+                2
+            ),
 
-        "risk_status": risk_status,
+        "risk_status":
+            risk_status,
 
-        "database_status": "Prediction saved successfully"
+        "database_status":
+            "Prediction saved successfully"
 
     }
 
@@ -219,10 +263,122 @@ def history():
 
         })
 
+
     return {
 
-        "total_predictions": len(results),
+        "total_predictions":
+            len(results),
 
-        "history": results
+        "history":
+            results
+
+    }
+
+
+# ==========================================
+# REAL-TIME SENSOR PREDICTION API
+# ==========================================
+
+@app.get("/realtime")
+def realtime_prediction():
+
+    # ======================================
+    # GENERATE LIVE SENSOR DATA
+    # ======================================
+
+    sensor_data = generate_sensor_data()
+
+
+    # ======================================
+    # PREPARE DATA FOR ML MODEL
+    # ======================================
+
+    machine_data = pd.DataFrame([{
+
+        "Type": 0,
+
+        "Air temperature [K]":
+            sensor_data["air_temperature"],
+
+        "Process temperature [K]":
+            sensor_data["process_temperature"],
+
+        "Rotational speed [rpm]":
+            sensor_data["rotational_speed"],
+
+        "Torque [Nm]":
+            sensor_data["torque"],
+
+        "Tool wear [min]":
+            sensor_data["tool_wear"],
+
+        "TWF": 0,
+
+        "HDF": 0,
+
+        "PWF": 0,
+
+        "OSF": 0,
+
+        "RNF": 0
+
+    }])
+
+
+    # ======================================
+    # ML PREDICTION
+    # ======================================
+
+    prediction = model.predict(
+        machine_data
+    )[0]
+
+    probability = model.predict_proba(
+        machine_data
+    )[0][1]
+
+    failure_probability = probability * 100
+
+
+    # ======================================
+    # RISK STATUS
+    # ======================================
+
+    if failure_probability < 30:
+
+        risk_status = "NORMAL"
+
+    elif failure_probability < 60:
+
+        risk_status = "MONITOR"
+
+    else:
+
+        risk_status = "MAINTENANCE REQUIRED"
+
+
+    # ======================================
+    # RETURN REAL-TIME RESULT
+    # ======================================
+
+    return {
+
+        "sensor_data": sensor_data,
+
+        "prediction":
+            (
+                "FAILURE"
+                if prediction == 1
+                else "NO FAILURE"
+            ),
+
+        "failure_probability":
+            round(
+                failure_probability,
+                2
+            ),
+
+        "risk_status":
+            risk_status
 
     }

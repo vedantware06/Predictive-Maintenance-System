@@ -1,11 +1,19 @@
+
 import sqlite3
 from datetime import datetime
+from pathlib import Path
 
 # ==========================================
 # DATABASE PATH
 # ==========================================
 
-DATABASE_PATH = "database/predictive_maintenance.db"
+# Find the main project folder automatically
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+DATABASE_DIR = PROJECT_ROOT / "database"
+DATABASE_DIR.mkdir(parents=True, exist_ok=True)
+
+DATABASE_PATH = DATABASE_DIR / "predictive_maintenance.db"
 
 
 # ==========================================
@@ -46,7 +54,6 @@ def create_table():
     """)
 
     connection.commit()
-
     connection.close()
 
 
@@ -68,11 +75,24 @@ def save_prediction(
 
     connection = sqlite3.connect(DATABASE_PATH)
 
-    cursor = connection.cursor()
+    try:
+        cursor = connection.cursor()
 
-    cursor.execute("""
-        INSERT INTO predictions (
-
+        cursor.execute("""
+            INSERT INTO predictions (
+                machine_type,
+                air_temperature,
+                process_temperature,
+                rotational_speed,
+                torque,
+                tool_wear,
+                prediction,
+                failure_probability,
+                risk_status,
+                created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
             machine_type,
             air_temperature,
             process_temperature,
@@ -82,29 +102,13 @@ def save_prediction(
             prediction,
             failure_probability,
             risk_status,
-            created_at
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        ))
 
-        )
+        connection.commit()
 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (
-
-        machine_type,
-        air_temperature,
-        process_temperature,
-        rotational_speed,
-        torque,
-        tool_wear,
-        prediction,
-        failure_probability,
-        risk_status,
-        datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    ))
-
-    connection.commit()
-
-    connection.close()
+    finally:
+        connection.close()
 
 
 # ==========================================
@@ -115,29 +119,27 @@ def get_predictions():
 
     connection = sqlite3.connect(DATABASE_PATH)
 
-    cursor = connection.cursor()
+    try:
+        cursor = connection.cursor()
 
-    cursor.execute("""
-        SELECT
-            id,
-            machine_type,
-            air_temperature,
-            process_temperature,
-            rotational_speed,
-            torque,
-            tool_wear,
-            prediction,
-            failure_probability,
-            risk_status,
-            created_at
+        cursor.execute("""
+            SELECT
+                id,
+                machine_type,
+                air_temperature,
+                process_temperature,
+                rotational_speed,
+                torque,
+                tool_wear,
+                prediction,
+                failure_probability,
+                risk_status,
+                created_at
+            FROM predictions
+            ORDER BY id DESC
+        """)
 
-        FROM predictions
+        return cursor.fetchall()
 
-        ORDER BY id DESC
-    """)
-
-    rows = cursor.fetchall()
-
-    connection.close()
-
-    return rows
+    finally:
+        connection.close()
